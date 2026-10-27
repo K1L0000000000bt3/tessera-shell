@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 开始屏自己在页面里播放磁贴翻出（真 3D），窗口本身保持不动，等应用页转入盖住。 -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromAlpha="1.0" android:toAlpha="1.0"
+    android:duration="300"
+    android:zAdjustment="bottom" />

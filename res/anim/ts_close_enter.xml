@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 回到桌面：桌面本身不做动画，露出来之后由页面里的磁贴从左往右依次翻回来。 -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromAlpha="1.0" android:toAlpha="1.0"
+    android:duration="1"
+    android:zAdjustment="bottom" />

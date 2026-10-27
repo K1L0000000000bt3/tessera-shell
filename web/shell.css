@@ -1,0 +1,194 @@
+/* Tessera 外壳：把设计稿的预览外框换成真实手表屏幕，并补上组件之外的部分。
+   所有数值都来自 tokens.css 的变量；这里没有新颜色。 */
+
+html, body {
+  margin: 0;
+  width: var(--screen-w);
+  height: var(--screen-h);
+  overflow: hidden;
+  background: transparent;   /* 原生表盘画在 WebView 下面；开始屏、通知中心各自有底色 */
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+#root { position: fixed; left: 0; top: 0; width: var(--screen-w); height: var(--screen-h); }
+
+/* 屏幕的物理圆角：用校准图在真机上量出约 68 物理像素（黄 60 与绿 75 之间），即 200 逻辑屏上的 28px。
+   设计稿的 radius-screen 是 40px，这里只按真机硬件改这一个值；秒刻度圈、横幅上角、磁贴切角、内阴影都跟着它走。 */
+:root { --radius-screen: 28px; }
+
+/* 应用列表上下边的内阴影：改成和通知横幅 toast-drop 一样小而硬（6px 模糊，同样的深度） */
+:root, [data-theme="dark"] {
+  --inset-edge-top: inset 0 8px 6px -2px #000000cc;
+  --inset-edge-bottom: inset 0 -8px 6px -2px #000000cc;
+}
+[data-theme="light"] {
+  --inset-edge-top: inset 0 8px 6px -2px #1b2a3a59;
+  --inset-edge-bottom: inset 0 -8px 6px -2px #1b2a3a59;
+}
+
+/* 真机上屏幕本身就是外框：去掉预览里的表壳、表冠和侧键 */
+.ts-watch { padding: 0; background: transparent; border-radius: 0; width: var(--screen-w); }
+.ts-watch::before, .ts-watch::after { display: none; }
+.ts-body::-webkit-scrollbar { display: none; }
+/* 能滚的屏（开始屏、应用页）只允许纵向滚动；表盘不滚，手势全交给页面 */
+.ts-body { overscroll-behavior: contain; touch-action: pan-y; }
+.sh-face-layer .ts-body, .sh-toast-host .ts-body { touch-action: none; }
+/* bundle.css 给 .ts-tile 设了 touch-action: none（为了拖动），可磁贴铺满整屏，触屏上手指就滚不动了。
+   README 的本意是“按住期间手指一动就当作滚动”：这里允许纵向滚动；拿起之后由 shell.js 拦住滚动，拖动不受影响。 */
+.ts-start .ts-tile { touch-action: pan-y; }
+
+/* 表盘：开始屏推上来的时候往下沉一点（缩小 + 下移 + 变暗），做成视差错觉 */
+.sh-face-layer { transform-origin: center top; transition: transform 300ms cubic-bezier(0.1, 0.9, 0.2, 1), opacity 300ms ease; }
+.sh-face-layer.is-sunk { transform: translateY(5.5%) scale(0.93); opacity: 0.85; }
+
+/* ---------- 屏幕层：每一层是一整块 200×200 的屏幕 ---------- */
+.sh-layer { position: absolute; left: 0; top: 0; width: var(--screen-w); height: var(--screen-h);
+  contain: layout paint style; }   /* 把每层的布局/绘制影响限制在自己这层，拖动时不用重算全树 */
+/* 跟手拖动中：不要过渡，位移直接跟手指；松手后才用过渡补完最后一小段 */
+/* 跟手拖动：位移与下沉全部由 CSS 变量驱动（--dy 位移、--p 下沉进度），拖动中不触发 React 重渲染 */
+/* 松手补完阶段 sh-dragging 和 sh-settle 会同时挂 210ms：这里必须排除 sh-settle，
+   否则 !important 会压掉下面的补完过渡，松手就直接跳到终点 */
+html.sh-dragging:not(.sh-settle) .sh-layer { transition: none !important; }
+/* 位移和下沉都用行内 style 直接写，这里只留过渡规则 */
+html.sh-settle .sh-start-layer, html.sh-settle .sh-notifs-layer, html.sh-settle .sh-face-layer {
+  transition: transform 200ms cubic-bezier(0.1, 0.9, 0.2, 1), opacity 200ms ease;
+}
+/* 拖动时要跟着手指每帧改变换：给这几层各自的合成层，
+   否则每次改 transform 都会整块重绘（这块芯片上就是"卡得没法用"的主因）。 */
+.sh-face-layer, .sh-start-layer, .sh-notifs-layer { will-change: transform, opacity; backface-visibility: hidden; }
+.sh-start-layer { transition: transform 200ms cubic-bezier(0.1, 0.9, 0.2, 1); }
+/* 开始屏交给原生网格时，WebView 这一层让出位置（只留手势和别的界面） */
+html.native-start .sh-start-layer { visibility: hidden; }
+.sh-layer[hidden] { display: none; }
+
+/* 表盘上滑进开始屏：开始屏从下面整块推上来；下滑拉出通知中心：从上面落下 */
+@keyframes sh-up-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes sh-up-out { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes sh-down-in { from { transform: translateY(-100%); } to { transform: none; } }
+@keyframes sh-down-out { from { transform: none; } to { transform: translateY(-100%); } }
+.sh-enter-up { animation: sh-up-in 300ms cubic-bezier(0.1, 0.9, 0.2, 1) both; }
+.sh-leave-up { animation: sh-up-out 240ms cubic-bezier(0.7, 0, 0.9, 0.3) both; }
+.sh-enter-down { animation: sh-down-in 300ms cubic-bezier(0.1, 0.9, 0.2, 1) both; }
+.sh-leave-down { animation: sh-down-out 240ms cubic-bezier(0.7, 0, 0.9, 0.3) both; }
+
+/* 转门：磁贴以左边缘为轴自上而下依次翻出，每块错开 30ms；应用页从右侧转入。返回反向。 */
+/* 透视不再挂在容器上：见下面 .ts-tile 的注释（容器 3D 上下文会让逐块动画更慢）。 */
+/* 只动 transform、不动 opacity：翻到 -90° 本来就是一条边，看不见；少一次逐帧混合。 */
+@keyframes sh-tile-out { from { transform: none; } to { transform: perspective(600px) rotateY(-90deg); } }
+@keyframes sh-tile-in { from { transform: perspective(600px) rotateY(-90deg); } to { transform: none; } }
+/* 逐块翻的时候给每块自己的合成层；透视放进 transform 里（容器上那个 perspective 会把整棵子树
+   塞进一个 3D 渲染上下文，十几块同时翻反而更卡）。时长和 shell.js 的 TURN 对齐。 */
+/* 以自己中间那条竖轴翻：卡片在原地对折，左右两边对称收进去 */
+.sh-turn-out .ts-tile, .sh-turn-in .ts-tile { transform-origin: center center; will-change: transform, opacity; backface-visibility: hidden; }
+.sh-turn-out .ts-tile { animation: sh-tile-out var(--turn-dur, 300ms) cubic-bezier(0.7, 0, 0.9, 0.3) both; animation-delay: var(--turn-delay, 0ms); }
+.sh-turn-in .ts-tile { animation: sh-tile-in var(--turn-dur, 300ms) cubic-bezier(0.1, 0.9, 0.2, 1) both; animation-delay: var(--turn-delay, 0ms); }
+@keyframes sh-page-in { from { transform: perspective(600px) rotateY(80deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sh-page-out { from { transform: none; opacity: 1; } to { transform: perspective(600px) rotateY(80deg); opacity: 0; } }
+.sh-page-in { transform-origin: left center; animation: sh-page-in 300ms cubic-bezier(0.1, 0.9, 0.2, 1) both; }
+.sh-page-out { transform-origin: left center; animation: sh-page-out 240ms cubic-bezier(0.7, 0, 0.9, 0.3) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-enter-up, .sh-enter-down, .sh-page-in, .sh-turn-in .ts-tile { animation: sh-fade-in 150ms ease both; }
+  .sh-leave-up, .sh-leave-down, .sh-page-out, .sh-turn-out .ts-tile { animation: sh-fade-out 150ms ease both; }
+}
+@keyframes sh-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sh-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* ---------- 通知中心：半透明磨砂，底下那张表盘会透上来 ---------- */
+.sh-notifs .ts-screen {
+  background: var(--surface);
+  /* 磨砂按设计稿的 mica（blur 24px + saturate 180%，底色 62%）：表盘是原生画在 WebView 下面的，
+     backdrop-filter 看不到它，模糊由 FaceView 的磨砂层画（shell.js 逐帧报通知中心的下边缘），这里只留半透明底色 */
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .sh-notifs .ts-screen { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+.sh-empty { margin-top: 44px; text-align: center; color: var(--ink-muted); font-size: 15px; line-height: 20px; }
+.sh-empty-icon { display: block; margin: 0 auto var(--space-3); color: var(--ink-subtle); }
+.sh-clear { margin: var(--space-4) 0 0; }
+.sh-swipe { transition: transform 200ms cubic-bezier(0.1, 0.9, 0.2, 1), opacity 200ms; touch-action: pan-y; }
+.sh-swipe.is-gone { transform: translateX(-110%); opacity: 0; }
+
+/* ---------- 设置 / 编辑磁贴（未设计 · 胚胎）：沿用 Toggle、Button、ListItem ---------- */
+.sh-section { margin: var(--space-4) 0 var(--space-1); font-size: 11px; line-height: 14px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); }
+.sh-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; }
+.sh-row-label { font-size: 15px; line-height: 20px; color: var(--ink); }
+.sh-row-sub { display: block; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.sh-pills { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.sh-pills .ts-btn { padding: 0 var(--space-4); }
+.sh-swatches { display: flex; gap: var(--space-2); padding: var(--space-2) 0; }
+.sh-swatch { width: 28px; height: 28px; border-radius: var(--radius-pill); border: 0; padding: 0; cursor: pointer; }
+.sh-swatch.is-on { box-shadow: var(--focus-ring); }
+.sh-preview { display: flex; justify-content: center; margin: var(--space-3) 0 var(--space-4); pointer-events: none; }
+.sh-preview .ts-grid { margin: 0; grid-template-columns: repeat(4, var(--tile-s)); }
+.sh-note { font-size: 11px; line-height: 14px; color: var(--ink-subtle); margin-top: var(--space-4); }
+
+/* 桌面里的横幅层：只占横幅本身，屏幕底色透明 */
+.sh-toast-host .ts-screen { background: transparent; }
+.sh-face-hit { position: absolute; inset: 0; }
+
+/* ---------- 其他应用上方的状态层 ---------- */
+.ov-body, .ov-body #root { background: transparent; }
+/* 状态时间与 Watch 组件里的 ts-status-time 同一个位置与字号；压在任意应用上，加一层很淡的暗晕保证可读（胚胎） */
+.ov-status { position: absolute; left: 0; top: 0; right: 0; height: var(--status-h); pointer-events: none; }
+.ov-status .ts-status-time { color: var(--ink); text-shadow: 0 0 3px rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 0, 0, 0.9); }
+/* 悬浮层拿不到下面应用的画面，磨砂无从模糊，按“降低透明度”的规则改为实色 */
+.ov-body .ts-toast { background: var(--tile-bg, var(--accent)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* 两个上角顺着屏幕圆角切弯，下沿的阴影露出来 */
+.ov-toast { position: absolute; left: 0; right: 0; top: 0;
+  clip-path: inset(0 0 -20px 0 round var(--radius-screen) var(--radius-screen) 0 0); }
+.ov-toast .ts-screen { background: transparent; }
+
+/* 悬浮层整页透明。html 的 background 会铺满整个画布（body 里设成透明也没用），
+   不显式清掉，浮层窗口就会在应用上方留一条黑边。 */
+html.ov-html, html.ov-html body { background: transparent; }
+
+/* 第三方应用的磁贴：只放图标，不放文字（Windows 8 那种块面） */
+.sh-appicon {
+  display: block;
+  width: 62%;
+  height: 62%;
+  margin: auto;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* 通知横幅矮一点：设计稿上下内边距 20/10（整条 84 设计像素高），在 480 的屏上压掉太多内容，
+   收到 12/7，整条 73 设计像素（少 11，约 26 物理像素）。 */
+.ts-toast { padding-top: 12px; padding-bottom: 7px; }
+
+/* 打开应用：被点的卡片克隆一份浮到最上层，从自己的矩形放大到铺满整屏（图标和底色一起长大） */
+.sh-zoom-card {
+  position: fixed;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden;
+  transform-origin: center center;
+  border-radius: var(--radius-card, 12px);
+  will-change: transform;
+  transition: transform 240ms cubic-bezier(0.1, 0.9, 0.2, 1), border-radius 240ms ease;
+}
+/* 其他卡片和页面底色一起淡出，只留那张在放大 */
+html.sh-zoom-out .sh-start-layer .ts-tile { opacity: 0; transition: opacity 140ms ease; }
+html.sh-zoom-out .sh-start-layer .ts-screen { transition: background 140ms ease; }
+
+/* ---------- 原生表盘 ----------
+   表盘由 FaceView 画在 WebView 下面，.sh-face-layer 只剩透明的手势区：
+   下沉的位移/缩放/透明度交给原生，这一层自己不再变换（否则手势区会跟着偏移）。 */
+.sh-face-layer, .sh-face-layer.is-sunk { transform: none !important; opacity: 1 !important; background: transparent; }
+/* 横幅盖在原生表盘上时，WebView 的 backdrop-filter 取不到下面的原生画面：模糊改由 FaceView 在横幅底下画
+   （shell.js 的 ToastLayer 逐帧报位置），这里只关掉 backdrop-filter，底色仍是设计稿的 mica（噪点 + 62%） */
+html.sh-on-face .ts-toast { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* 开始屏列表的触摸滚动由 shell.js 的 ListScroller 接管（惯性 + 边缘橡皮筋 + 回弹，顶上下拉无缝回表盘），
+   这里关掉原生触摸滚动；鼠标滚轮和表冠仍走原生 scrollTop。必须放在文件末尾，盖过上面 .ts-start .ts-tile 的 pan-y。 */
+/* 通知中心、设置/编辑页同理（ListScroller；通知行左滑删除走指针事件，不受影响） */
+.sh-start-layer .ts-body, .sh-start-layer .ts-body *,
+.sh-notifs-layer .ts-body, .sh-notifs-layer .ts-body *,
+.sh-page-layer .ts-body, .sh-page-layer .ts-body * { touch-action: none; }

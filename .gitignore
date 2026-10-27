@@ -1,0 +1,14 @@
+# 构建产物（默认输出到仓库外；放在仓库里构建时也别提交）
+build/
+*.apk
+*.dex
+*.class
+
+# 签名密钥和密码
+*.jks
+*.keystore
+*.pass
+
+# Windows 上误生成的设备名文件（如 2>nul 写出来的 "nul"）
+nul
+**/nul

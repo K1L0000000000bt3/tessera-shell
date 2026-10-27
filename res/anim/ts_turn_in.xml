@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WP TurnstileForwardIn：0.35 秒、指数缓出、0.01 秒内出现。应用窗口按转门（Windows Phone turnstile）翻进来：桌面的卡片绕屏幕左边缘往里翻走，应用顺着同一个方向翻出来。
+     窗口动画只能做 2D 变换，所以用"以左边缘为轴、从窄到宽展开 + 竖向从略大收到原大（离人更近的一边更大）"近似 3D 的翻转。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:zAdjustment="top"
+    android:shareInterpolator="false">
+    <scale
+        android:fromXScale="0.18" android:toXScale="1.0"
+        android:fromYScale="0.94" android:toYScale="1.0"
+        android:pivotX="0%" android:pivotY="50%"
+        android:duration="350"
+        android:interpolator="@interpolator/ts_wp_in" />
+    <alpha
+        android:fromAlpha="0.0" android:toAlpha="1.0"
+        android:duration="10"
+        android:interpolator="@android:interpolator/linear" />
+</set>

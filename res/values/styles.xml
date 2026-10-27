@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 桌面的窗口动画：应用关掉、桌面重新露出来时也走转门，而不是系统的默认过场。
+         open/close 四个方向都给上，避免系统按某个方向回退到默认动画。 -->
+    <style name="TesseraWindowAnimation">
+        <item name="android:activityOpenEnterAnimation">@anim/ts_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/ts_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/ts_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/ts_close_exit</item>
+        <item name="android:taskOpenEnterAnimation">@anim/ts_open_enter</item>
+        <item name="android:taskOpenExitAnimation">@anim/ts_open_exit</item>
+        <item name="android:taskCloseEnterAnimation">@anim/ts_close_enter</item>
+        <item name="android:taskCloseExitAnimation">@anim/ts_close_exit</item>
+    </style>
+
+    <style name="TesseraHome" parent="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+        <item name="android:windowAnimationStyle">@style/TesseraWindowAnimation</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>

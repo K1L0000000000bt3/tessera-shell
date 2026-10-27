@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 伪 3D：和磁贴同一套动作——以中间竖轴从 0 展开，同时纵向从 0.96 涨到 1，
+     在 2D 里最接近"一张卡片从中间翻过来"的观感。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false"
+    android:zAdjustment="top">
+    <scale
+        android:fromXScale="0.0" android:toXScale="1.0"
+        android:fromYScale="0.96" android:toYScale="1.0"
+        android:pivotX="50%" android:pivotY="50%"
+        android:duration="350"
+        android:fillBefore="true" android:fillEnabled="true"
+        android:interpolator="@interpolator/ts_wp_in" />
+</set>

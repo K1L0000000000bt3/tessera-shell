@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<!-- 设计稿的逻辑屏是 200×200，WebView 按屏宽缩放（480 物理像素时 1 设计像素 = 2.4 物理像素） -->
+<meta name="viewport" content="width=200, user-scalable=no">
+<script>
+  // 把 200 宽的设计屏锁死在整块屏幕上，和系统显示密度无关。
+  // 只靠 WebView 的 overview 模式时，缩放比例随密度变（320 时布局宽度会变成 150），所以这里显式写死三个缩放值。
+  // 运行中改密度不会重新加载页面（Activity 自己处理 density 变化），所以 resize 时要重新算一遍。
+  (function () {
+    var meta = document.querySelector('meta[name=viewport]');
+    function fit() {
+      // 往上多取万分之一：缩放值在 WebView 里是单精度，1.92 会变成 1.9199999，
+      // 可视宽度算出来 200.00002，布局宽度就被向上取成 201（右边多出 1px、磁贴网格错位）
+      var s = (Math.ceil(screen.width / 200 * 10000) + 1) / 10000;
+      var c = 'width=200, initial-scale=' + s + ', minimum-scale=' + s + ', maximum-scale=' + s + ', user-scalable=no';
+      if (meta.content !== c) meta.content = c;
+    }
+    fit();
+    window.addEventListener('resize', fit);
+  })();
+</script>
+<title>Tessera</title>
+<link rel="stylesheet" href="noto/noto.css">
+<link rel="stylesheet" href="tessera/preview/tokens.css">
+<link rel="stylesheet" href="tessera/components/bundle.css">
+<link rel="stylesheet" href="shell.css">
+<script src="tessera/preview/lib/react.production.min.js"></script>
+<script src="tessera/preview/lib/react-dom.production.min.js"></script>
+<script src="tessera/components/bundle.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script src="common.js"></script>
+<script src="shell.js"></script>
+</body>
+</html>

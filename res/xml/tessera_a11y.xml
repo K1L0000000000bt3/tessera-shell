@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tessera 屏幕层：用无障碍浮层画真机圆角遮罩。
+     普通应用悬浮窗（TYPE_APPLICATION_OVERLAY）会被声明了 HIDE_NON_SYSTEM_OVERLAY_WINDOWS 的应用
+     （系统设置就是）强制隐藏；无障碍浮层不在那个名单里，所以能一直盖在所有应用上方。 -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="200"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/tessera_a11y_desc" />

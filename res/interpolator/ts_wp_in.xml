@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WP 的 ExponentialEase Exponent 6 EaseOut（进来 / 滑入），三次贝塞尔拟合，误差约 1%。同 Curves 里的默认值。 -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.15" android:controlY1="0.83" android:controlX2="0.28" android:controlY2="1" />

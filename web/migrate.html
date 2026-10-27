@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<!-- 一次性：把 WebView 版存在 localStorage 里的设置（ts.layout / ts.look / ts.face）交给原生桌面 -->
+<script>
+  var o = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('ts.') === 0) o[k] = localStorage.getItem(k);
+    }
+  } catch (e) {}
+  TesseraHost.exportStorage(JSON.stringify(o));
+</script>

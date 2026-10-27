@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tessera_a11y_label">Tessera 屏幕层</string>
+    <string name="tessera_a11y_desc">在所有应用上方画屏幕圆角遮罩，让第三方应用和桌面一样贴在真机的圆角屏幕上。不读取任何界面内容。</string>
+</resources>

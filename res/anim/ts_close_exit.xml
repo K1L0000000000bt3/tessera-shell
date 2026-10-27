@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用退场：WP TurnstileBackwardOut——0.25 秒绕左边缘往里转到 80°（指数缓入，右边离人远、变小），最后 0.01 秒才消失；开始屏接着从外面翻回来。
+     窗口动画只能做 2D：以左边缘为轴横向收到 cos80° ≈ 0.17、竖向缩到 0.94 来近似。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:zAdjustment="top"
+    android:shareInterpolator="false">
+    <scale
+        android:fromXScale="1.0" android:toXScale="0.17"
+        android:fromYScale="1.0" android:toYScale="0.94"
+        android:pivotX="0%" android:pivotY="50%"
+        android:duration="250"
+        android:fillAfter="true"
+        android:interpolator="@interpolator/ts_wp_out" />
+    <alpha
+        android:fromAlpha="1.0" android:toAlpha="0.0"
+        android:startOffset="240"
+        android:duration="10"
+        android:fillAfter="true"
+        android:interpolator="@android:interpolator/linear" />
+</set>
