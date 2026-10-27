@@ -1,6 +1,7 @@
 # Tessera
+只是一个VibeCoding出来的无意义项目
 
-给 480×480 方屏安卓手表（Android 11）写的桌面（launcher），界面是 Windows Phone 风格的"磁贴"设计。
+给 480×480 方屏安卓手表（Android 11）写的桌面（launcher），设计参考Windows Metro。
 整套界面用原生 Java + Canvas 自己画，不依赖 AndroidX / Gradle；所有尺寸都按 200×200 的设计坐标来算，再整体放大到屏幕。
 
 ## 有什么
@@ -48,7 +49,7 @@ $env:TESSERA_KEYSTORE_PASS = '你的密钥密码'
 .\scripts\Build-Tessera.ps1 -Sdk D:\android-sdk -KeyStore D:\keys\my.jks
 ```
 
-安装后把它设成默认桌面：
+安装后设为默认桌面：
 
 ```bash
 adb install -r build/Tessera.apk
