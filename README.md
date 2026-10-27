@@ -1,7 +1,7 @@
 # Tessera
 只是一个VibeCoding出来的无技术含量的项目，这个项目只约等于一个设计稿。
 
-给 480×480 方屏安卓手表（Android 11）写的桌面（launcher），设计参考Windows Metro。
+给 480×480 方屏安卓手表（Android 11）写的桌面（launcher），设计参考Windows Metro
 整套界面用原生 Java + Canvas 自己画，不依赖 AndroidX / Gradle；所有尺寸都按 200×200 的设计坐标来算，再整体放大到屏幕。
 
 ## 有什么
